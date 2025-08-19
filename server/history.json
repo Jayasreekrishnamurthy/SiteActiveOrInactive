@@ -1,0 +1,65 @@
+[
+  {
+    "url": "https://py.gov.in/",
+    "status": "active",
+    "message": "Website is reachable",
+    "code": 200,
+    "time": "19/08/2025, 12:48:04"
+  },
+  {
+    "url": "https://wcd.py.gov.in/",
+    "status": "inactive",
+    "message": "timeout of 10000ms exceeded",
+    "code": 500,
+    "time": "19/08/2025, 12:48:55"
+  },
+  {
+    "url": "https://pwdwms.py.gov.in",
+    "status": "active",
+    "message": "Website is reachable",
+    "code": 200,
+    "time": "19/08/2025, 12:49:41"
+  },
+  {
+    "url": "https://nicegst.py.gov.in",
+    "status": "inactive",
+    "message": "timeout of 10000ms exceeded",
+    "code": 500,
+    "time": "19/08/2025, 12:49:45"
+  },
+  {
+    "url": "https://recruitment.py.gov.in",
+    "status": "active",
+    "message": "Website is reachable",
+    "code": 200,
+    "time": "19/08/2025, 12:49:48"
+  },
+  {
+    "url": "https://pdsswo.py.gov.in",
+    "status": "active",
+    "message": "Website is reachable",
+    "code": 200,
+    "time": "19/08/2025, 12:49:50"
+  },
+  {
+    "url": "https://nilamagal.py.gov.in",
+    "status": "active",
+    "message": "Website is reachable",
+    "code": 200,
+    "time": "19/08/2025, 12:49:54"
+  },
+  {
+    "url": "https://nicegst.py.gov.in",
+    "status": "inactive",
+    "message": "timeout of 10000ms exceeded",
+    "code": 500,
+    "time": "19/08/2025, 12:49:55"
+  },
+  {
+    "url": "https://py.gov.in/",
+    "status": "active",
+    "message": "Website is reachable",
+    "code": 200,
+    "time": "19/08/2025, 14:36:31"
+  }
+]
