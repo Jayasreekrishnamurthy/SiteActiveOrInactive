@@ -1,22 +1,27 @@
-// backend/server.js
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-const https = require("https");
-const fs = require("fs");
+import express from "express";
+import axios from "axios";
+import cors from "cors";
+import https from "https";
+import mysql from "mysql2/promise";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const HISTORY_FILE = "history.json";
+// 🔹 MySQL connection
+const db = await mysql.createPool({
+  host: "localhost",
+  user: "root",      // change if needed
+  password: "",      // change if needed
+  database: "website_checker", // make sure this DB exists
+});
 
 // Allow self-signed/old SSL certs
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false, // ignore SSL errors
 });
 
-// Website status check API
+// ----------------- WEBSITE STATUS CHECK -----------------
 app.post("/api/check", async (req, res) => {
   const { url } = req.body;
 
@@ -34,77 +39,83 @@ app.post("/api/check", async (req, res) => {
 
     res.json({
       status: "active",
-      statusCode: response.status,
+      code: response.status,
       message: "Website is reachable",
     });
   } catch (error) {
     res.json({
       status: "inactive",
-      statusCode: error.response ? error.response.status : 500,
+      code: error.response ? error.response.status : 500,
       message: error.message,
     });
   }
 });
 
-// ----------------- NEW: HISTORY APIs -----------------
+// ----------------- HISTORY CRUD -----------------
 
-// Get all history
-app.get("/api/history", (req, res) => {
-  fs.readFile(HISTORY_FILE, "utf8", (err, data) => {
-    if (err) return res.json([]); // no file yet
-    try {
-      res.json(JSON.parse(data));
-    } catch {
-      res.json([]);
-    }
-  });
+// ➤ Get all history (map DB `code` -> API `statusCode`)
+app.get("/api/history", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM history ORDER BY id DESC");
+
+    // Fix column mapping here
+    const formatted = rows.map((r) => ({
+      id: r.id,
+      url: r.url,
+      status: r.status,
+      message: r.message,
+      code: r.code, 
+      time: r.time,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Save new entry to history
-app.post("/api/history", (req, res) => {
-  const newEntry = req.body;
-
-  fs.readFile(HISTORY_FILE, "utf8", (err, data) => {
-    let history = [];
-    if (!err && data) {
-      try {
-        history = JSON.parse(data);
-      } catch {}
-    }
-
-    history.push(newEntry);
-
-    fs.writeFile(HISTORY_FILE, JSON.stringify(history, null, 2), (err) => {
-      if (err) return res.status(500).json({ error: "Failed to save" });
-      res.json({ success: true });
-    });
-  });
+// ➤ Insert new record
+app.post("/api/history", async (req, res) => {
+  const { url, status, message, code, time } = req.body;
+  try {
+    const [result] = await db.query(
+      "INSERT INTO history (url, status, message, code, time) VALUES (?, ?, ?, ?, ?)",
+      [url, status, message, code, time]
+    );
+    res.json({ id: result.insertId, url, status, message, code, time });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Delete entry by index
-app.delete("/api/history/:index", (req, res) => {
-  const index = parseInt(req.params.index, 10);
-
-  fs.readFile(HISTORY_FILE, "utf8", (err, data) => {
-    let history = [];
-    if (!err && data) {
-      try {
-        history = JSON.parse(data);
-      } catch {}
-    }
-
-    if (index >= 0 && index < history.length) {
-      history.splice(index, 1);
-    }
-
-    fs.writeFile(HISTORY_FILE, JSON.stringify(history, null, 2), (err) => {
-      if (err) return res.status(500).json({ error: "Failed to delete" });
-      res.json({ success: true });
-    });
-  });
+// ➤ Update record
+app.put("/api/history/:id", async (req, res) => {
+  const { id } = req.params;
+  const { url, status, message, code, time } = req.body;
+  try {
+    await db.query(
+      "UPDATE history SET url=?, status=?, message=?, code=?, time=? WHERE id=?",
+      [url, status, message, code, time, id]
+    );
+    res.json({ id, url, status, message, code, time });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// ➤ Delete record
+app.delete("/api/history/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("DELETE FROM history WHERE id=?", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ----------------- SERVER START -----------------
 const PORT = 5000;
 app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
+  console.log(`✅ Server running on http://localhost:${PORT}`)
 );

@@ -4,12 +4,13 @@ import * as XLSX from "xlsx";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
-
 const CheckStatus = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");   // ✅ search
+  const [statusFilter, setStatusFilter] = useState("all"); // ✅ filter
   const rowsPerPage = 10;
 
   // Fetch history on load
@@ -19,19 +20,23 @@ const CheckStatus = () => {
       .then((res) => setHistory(res.data))
       .catch((err) => console.error("Error fetching history:", err));
   }, []);
-
-  // Auto re-check every 5 mins
+  // ✅ Auto recheck every 5 mins
   useEffect(() => {
-    if (history.length === 0) return;
-    const interval = setInterval(() => {
-      history.forEach((item, index) => {
-        checkRowStatus(index, item.url, true);
-      });
-    }, 300000);
+    const interval = setInterval(async () => {
+      try {
+        // Loop through all history records and refresh them
+        for (let item of history) {
+          await checkRowStatus(item);
+        }
+      } catch (err) {
+        console.error("Error auto rechecking websites:", err);
+      }
+    }, 60000); // 1 minute
+
     return () => clearInterval(interval);
   }, [history]);
 
-  // Manual check single website
+  // Manual check single website (Insert into DB)
   const checkWebsite = async () => {
     if (!url) return;
     setLoading(true);
@@ -44,12 +49,12 @@ const CheckStatus = () => {
         url,
         status: result.status,
         message: result.message,
-        code: result.statusCode,
+        code: result.code,
         time: new Date().toLocaleString(),
       };
 
-      await axios.post("http://localhost:5000/api/history", newEntry);
-      setHistory((prev) => [...prev, newEntry]);
+      const res = await axios.post("http://localhost:5000/api/history", newEntry);
+      setHistory((prev) => [...prev, res.data]); // DB returns new record with id
     } catch {
       const errorEntry = {
         url,
@@ -58,65 +63,63 @@ const CheckStatus = () => {
         code: "N/A",
         time: new Date().toLocaleString(),
       };
-      await axios.post("http://localhost:5000/api/history", errorEntry);
-      setHistory((prev) => [...prev, errorEntry]);
+      const res = await axios.post("http://localhost:5000/api/history", errorEntry);
+      setHistory((prev) => [...prev, res.data]);
     }
 
     setUrl("");
     setLoading(false);
   };
 
-  // Re-check row (manual/auto)
-  const checkRowStatus = async (index, url, isAuto = false) => {
+  // Re-check row (Update in DB)
+  const checkRowStatus = async (item) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/check", { url });
+      const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
       const result = response.data;
 
       const updatedEntry = {
-        url,
+        url: item.url,
         status: result.status,
         message: result.message,
-        code: result.statusCode,
+        code: result.code,
         time: new Date().toLocaleString(),
       };
 
-      setHistory((prev) => {
-        const newHistory = [...prev];
-        newHistory[index] = updatedEntry;
-        return newHistory;
-      });
+      const res = await axios.put(
+        `http://localhost:5000/api/history/${item.id}`,
+        updatedEntry
+      );
 
-      if (!isAuto) {
-        await axios.post("http://localhost:5000/api/history", updatedEntry);
-      }
+      setHistory((prev) =>
+        prev.map((h) => (h.id === item.id ? res.data : h))
+      );
     } catch {
       const errorEntry = {
-        url,
+        url: item.url,
         status: "inactive",
         message: "Error checking website",
         code: "N/A",
         time: new Date().toLocaleString(),
       };
 
-      setHistory((prev) => {
-        const newHistory = [...prev];
-        newHistory[index] = errorEntry;
-        return newHistory;
-      });
+      const res = await axios.put(
+        `http://localhost:5000/api/history/${item.id}`,
+        errorEntry
+      );
 
-      if (!isAuto) {
-        await axios.post("http://localhost:5000/api/history", errorEntry);
-      }
+      setHistory((prev) =>
+        prev.map((h) => (h.id === item.id ? res.data : h))
+      );
     }
   };
 
-  // Delete row
-  const deleteRow = async (index) => {
-    await axios.delete(`http://localhost:5000/api/history/${index}`);
-    setHistory((prev) => prev.filter((_, i) => i !== index));
+  // Delete row (Delete from DB)
+  const deleteRow = async (id) => {
+    await axios.delete(`http://localhost:5000/api/history/${id}`);
+    setHistory((prev) => prev.filter((h) => h.id !== id));
   };
 
-  // Import Excel/CSV
+  // Import Excel/CSV (Insert all into DB)
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -129,26 +132,42 @@ const CheckStatus = () => {
       const worksheet = workbook.Sheets[sheetName];
       const urls = XLSX.utils.sheet_to_json(worksheet, { header: 1 }).flat();
 
-      const entries = urls
-        .filter((link) => link && typeof link === "string")
-        .map((link) => ({
-          url: link,
-          status: "Not Checked",
-          message: "-",
-          code: "-",
-          time: "-",
-        }));
+      for (let link of urls) {
+        if (link && typeof link === "string") {
+          const entry = {
+            url: link,
+            status: "Not Checked",
+            message: "-",
+            code: "-",
+            time: "-",
+          };
 
-      setHistory((prev) => [...prev, ...entries]);
+          const res = await axios.post("http://localhost:5000/api/history", entry);
+          setHistory((prev) => [...prev, res.data]);
+        }
+      }
     };
     reader.readAsArrayBuffer(file);
   };
 
+  // ✅ Filter + Search Logic
+  const filteredHistory = history.filter((item) => {
+    const matchesSearch =
+      item.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.code.toString().includes(searchTerm);
+
+    const matchesStatus =
+      statusFilter === "all" ? true : item.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   // Pagination
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentRows = history.slice(indexOfFirstRow, indexOfLastRow);
-  const totalPages = Math.ceil(history.length / rowsPerPage);
+  const currentRows = filteredHistory.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(filteredHistory.length / rowsPerPage);
 
   return (
     <div>
@@ -171,11 +190,35 @@ const CheckStatus = () => {
           <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
         </div>
       </div>
+      {/* ✅ Search + Filter Controls */}
+      <div className="filter-bar" style={{ margin: "20px 0", display: "flex", gap: "15px" }}>
+        <input
+          type="text"
+          placeholder="Search by URL / Message / Code"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1); // reset page on search
+          }}
+        />
+
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
 
       {/* History Table */}
       <div className="history-table">
         <h2>History</h2>
-        {history.length === 0 ? (
+        {filteredHistory.length === 0 ? (
           <p>No websites checked yet.</p>
         ) : (
           <>
@@ -193,7 +236,7 @@ const CheckStatus = () => {
               </thead>
               <tbody>
                 {currentRows.map((item, index) => (
-                  <tr key={index} className={item.status}>
+                  <tr key={item.id} className={item.status}>
                     <td>{indexOfFirstRow + index + 1}</td>
                     <td>{item.url}</td>
                     <td>{item.status}</td>
@@ -201,17 +244,55 @@ const CheckStatus = () => {
                     <td>{item.code}</td>
                     <td>{item.time}</td>
                     <td>
+                      <select
+                        className="status-dropdown"
+                        value={item.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          let newMessage = "-";
+                          let newCode = "-";
+
+                          if (newStatus === "active") {
+                            newMessage = "Website is reachable";
+                            newCode = "200";
+                          } else if (newStatus === "inactive") {
+                            newMessage = "Set to Inactive";
+                            newCode = "503";
+                          }
+
+                          const updatedEntry = {
+                            ...item,
+                            status: newStatus,
+                            message: newMessage,
+                            code: newCode,
+                            time: new Date().toLocaleString(),
+                          };
+
+                          try {
+                            const res = await axios.put(
+                              `http://localhost:5000/api/history/${item.id}`,
+                              updatedEntry
+                            );
+                            setHistory((prev) =>
+                              prev.map((h) => (h.id === item.id ? res.data : h))
+                            );
+                          } catch (err) {
+                            console.error("Error updating status manually:", err);
+                          }
+                        }}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
                       <button
                         className="recheck-btn"
-                        onClick={() =>
-                          checkRowStatus(indexOfFirstRow + index, item.url)
-                        }
+                        onClick={() => checkRowStatus(item)}
                       >
                         Check
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={() => deleteRow(indexOfFirstRow + index)}
+                        onClick={() => deleteRow(item.id)}
                       >
                         Delete
                       </button>
@@ -221,18 +302,17 @@ const CheckStatus = () => {
               </tbody>
             </table>
 
-         {/* Pagination */}
-<div className="pagination-container">
-  <Stack spacing={2} alignItems="center" sx={{ marginTop: 2 }}>
-    <Pagination
-      count={totalPages} // total pages
-      page={currentPage} // current active page
-      onChange={(e, page) => setCurrentPage(page)} // handle page change
-      color="primary" // style (you can use "secondary" too)
-    />
-  </Stack>
-</div>
-
+            {/* Pagination */}
+            <div className="pagination-container">
+              <Stack spacing={2} alignItems="center" sx={{ marginTop: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(e, page) => setCurrentPage(page)}
+                  color="primary"
+                />
+              </Stack>
+            </div>
           </>
         )}
       </div>
