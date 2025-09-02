@@ -13,6 +13,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  
 }
 
 .sidebar h2 {
@@ -32,6 +33,10 @@
   color: #fff;
 }
 
+.sidebar-icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
 /* Main Content */
 .main {
   flex: 1;

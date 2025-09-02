@@ -1,30 +1,39 @@
 import React from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome, faGlobe, faPaperPlane, faHistory, faGear } from "@fortawesome/free-solid-svg-icons";
 import "../Style/Dashboard.css";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/"); // go back to login
+  };
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
       <aside className="sidebar">
         <h2>Dashboard</h2>
         <nav>
-          <Link to="/">Home</Link>
-          <Link to="/check-status">Check Status</Link>
-          <Link to="/history">History</Link>
-          <Link to="/settings">Settings</Link>
+          <Link to="."><FontAwesomeIcon icon={faHome} className="sidebar-icon" /> Home</Link>
+          <Link to="check-status"><FontAwesomeIcon icon={faGlobe} className="sidebar-icon" /> Check Status</Link>
+          <Link to="ticketraise"><FontAwesomeIcon icon={faPaperPlane} className="sidebar-icon" /> Ticket Raised</Link>
+          <Link to="history"><FontAwesomeIcon icon={faHistory} className="sidebar-icon history" /> History</Link>
+          <Link to="settings"><FontAwesomeIcon icon={faGear} className="sidebar-icon settings" /> Settings</Link>
         </nav>
       </aside>
 
       {/* Main */}
       <div className="main">
-        {/* Header */}
         <header className="header">
           <h1>Website Status Checker</h1>
-          <button className="logout-btn">Logout</button>
+          <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </header>
 
-        {/* Page Content (dynamic via routes) */}
+        {/* Child routes render here */}
         <main className="content">
           <Outlet />
         </main>

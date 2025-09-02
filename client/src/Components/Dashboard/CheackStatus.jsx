@@ -3,6 +3,10 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+
 
 const CheckStatus = () => {
   const [url, setUrl] = useState("");
@@ -39,6 +43,21 @@ const CheckStatus = () => {
   // Manual check single website (Insert into DB)
   const checkWebsite = async () => {
     if (!url) return;
+
+    const isValidUrl = (str) => {
+      try {
+        new URL(str.startsWith("http") ? str : `http://${str}`);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    };
+
+    if (!isValidUrl(url)) {
+      alert("❌ Invalid URL! Please enter a valid website (e.g., https://example.com)");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -54,7 +73,7 @@ const CheckStatus = () => {
       };
 
       const res = await axios.post("http://localhost:5000/api/history", newEntry);
-      setHistory((prev) => [...prev, res.data]); // DB returns new record with id
+      setHistory((prev) => [...prev, res.data]);
     } catch {
       const errorEntry = {
         url,
@@ -169,6 +188,37 @@ const CheckStatus = () => {
   const currentRows = filteredHistory.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(filteredHistory.length / rowsPerPage);
 
+
+  // ✅ Export to Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredHistory);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "WebsiteHistory");
+    XLSX.writeFile(workbook, "Website_History.xlsx");
+  };
+
+  // ✅ Export to PDF
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Website Status History", 14, 10);
+
+    autoTable(doc, {
+      head: [["SNO", "Website URL", "Status", "Message", "HTTP Code", "Checked At"]],
+      body: filteredHistory.map((item, index) => [
+        index + 1,
+        item.url,
+        item.status,
+        item.message,
+        item.code,
+        item.time,
+      ]),
+    });
+
+    doc.save("Website_History.pdf");
+  };
+
+
   return (
     <div>
       <div className="checker-box">
@@ -213,6 +263,9 @@ const CheckStatus = () => {
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
+        {/* ✅ Export Buttons */}
+        <button className="export-btn excel-btn" onClick={exportToExcel}>Export Excel</button>
+        <button className="export-btn pdf-btn" onClick={exportToPDF}>Export PDF</button>
       </div>
 
       {/* History Table */}

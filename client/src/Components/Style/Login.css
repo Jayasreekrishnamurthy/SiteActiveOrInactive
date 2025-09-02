@@ -1,0 +1,150 @@
+/* Full page container */
+.login-container {
+  display: flex;
+  justify-content: center;   /* horizontally center */
+  align-items: center;       /* vertically center */
+  min-height: 100vh;
+  /* background: linear-gradient(to right, #2b4cdb, #003366); */
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Center card */
+.login-card {
+  display: flex;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 900px;
+  max-width: 95%;
+  min-height: 500px;
+}
+
+/* Left section (image) */
+.login-left {
+  flex: 1;
+  background: #f0f4ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.login-image {
+  width: 80%;
+  max-width: 350px;
+  object-fit: contain;
+}
+
+/* Right section (form) */
+.login-right {
+  flex: 1;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+}
+
+.login-right h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #003366;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form label {
+  font-size: 14px;
+  margin: 10px 0 5px;
+  font-weight: 500;
+}
+
+.login-form input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+/* Forgot password link */
+.form-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.forgot-link {
+  font-size: 13px;
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Login button */
+.login-btn {
+  padding: 12px;
+  background: #003366;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+
+.login-btn:hover {
+  background: #0055aa;
+}
+
+/* Error message */
+.error {
+  color: red;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+/* Sign up link */
+.signup-text {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.signup-text a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+/* 📱 Responsive (mobile view) */
+@media (max-width: 768px) {
+  .login-card {
+    flex-direction: column;
+    width: 95%;
+  }
+
+  .login-left {
+    padding: 20px;
+  }
+
+  .login-image {
+    width: 60%;
+  }
+
+  .login-right {
+    padding: 30px;
+  }
+}
