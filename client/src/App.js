@@ -6,9 +6,12 @@ import Home from "./Components/Dashboard/HomePage.jsx";
 import Login from "./Components/Auth/Login.jsx";
 import Register from "./Components/Auth/Register.jsx";
 import Ticket from "./Components/TicketRaise/TicketRaise.jsx"
+import DataComponent from "./Components/Dashboard/Formcomponent.jsx";
 
 const History = () => <h2>History Page (future data)</h2>;
 const Settings = () => <h2>Settings Page</h2>;
+const Profile =() => <h2>PROFILE</h2>
+// const DataComponent = () => <h2>Data Component Page</h2>;
 
 // 🔹 Auth wrapper
 const PrivateRoute = ({ children }) => {
@@ -37,7 +40,9 @@ const App = () => {
           <Route path="check-status" element={<CheckStatus />} />
           <Route path="ticketraise" element={<Ticket />} />
           <Route path="history" element={<History />} />
+          <Route path="datacomponent" element={<DataComponent />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </Router>

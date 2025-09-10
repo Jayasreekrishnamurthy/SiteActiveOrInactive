@@ -18,12 +18,43 @@ const CheckStatus = () => {
   const rowsPerPage = 10;
 
   // Fetch history on load
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/history")
-      .then((res) => setHistory(res.data))
-      .catch((err) => console.error("Error fetching history:", err));
-  }, []);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const historyRes = await axios.get("http://localhost:5000/api/history");
+      const recordRes = await axios.get("http://localhost:5000/api/records");
+
+      // Build a map of history URLs for quick lookup
+      const historyMap = {};
+      historyRes.data.forEach(h => {
+        historyMap[h.url] = h;
+      });
+
+      // Merge: prefer history status if it exists, otherwise "Not Checked"
+      const mergedData = recordRes.data.map(r => {
+        if (historyMap[r.url]) {
+          return historyMap[r.url]; // ✅ keep checked data
+        } else {
+          return {
+            id: `record-${r.id}`,
+            url: r.url,
+            status: "Not Checked",
+            message: "-",
+            code: "-",
+            time: "-"
+          };
+        }
+      });
+
+      setHistory(mergedData);
+    } catch (err) {
+      console.error("Error fetching:", err);
+    }
+  };
+
+  fetchData();
+}, []);
+
   // ✅ Auto recheck every 5 mins
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -35,7 +66,7 @@ const CheckStatus = () => {
       } catch (err) {
         console.error("Error auto rechecking websites:", err);
       }
-    }, 60000); // 1 minute
+    }, 5000); // 1 minute
 
     return () => clearInterval(interval);
   }, [history]);

@@ -29,6 +29,105 @@ const httpsAgent = new https.Agent({
   rejectUnauthorized: false, // ignore SSL errors
 });
 
+// API endpoint to insert data
+app.get("/api/records", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM records");
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "❌ Failed to fetch records" });
+  }
+});
+
+// POST new record
+app.post("/api/records", async (req, res) => {
+  try {
+    let { url, public_ip, private_ip, contact, department } = req.body;
+
+    // Normalize again on backend (security & consistency)
+    url = url.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "").toLowerCase();
+
+    // Check duplicate
+    const [existing] = await db.query("SELECT * FROM records WHERE url = ?", [url]);
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "❌ Duplicate site already exists!" });
+    }
+
+    const [result] = await db.query(
+      "INSERT INTO records (url, public_ip, private_ip, contact, department) VALUES (?, ?, ?, ?, ?)",
+      [url, public_ip, private_ip, contact, department]
+    );
+
+    res.json({
+      message: "✅ Record added successfully!",
+      record: { id: result.insertId, url, public_ip, private_ip, contact, department },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "❌ Server error" });
+  }
+});
+
+
+// DELETE record
+app.delete("/api/records/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await db.query("DELETE FROM records WHERE id = ?", [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "❌ Record not found" });
+    }
+    res.json({ message: "✅ Record deleted successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "❌ Failed to delete record" });
+  }
+});
+app.put("/api/records/:id", async (req, res) => {
+  const { id } = req.params;
+  const { url, public_ip, private_ip, contact, department } = req.body;
+
+  try {
+    // Check duplicate URL (exclude current record)
+    const [existing] = await db.query("SELECT id FROM records WHERE url = ? AND id != ?", [url, id]);
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "❌ URL already exists!" });
+    }
+
+    const [result] = await db.query(
+      "UPDATE records SET url = ?, public_ip = ?, private_ip = ?, contact = ?, department = ? WHERE id = ?",
+      [url, public_ip, private_ip, contact, department, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "❌ Record not found" });
+    }
+
+    res.json({
+      message: "✅ Record updated successfully!",
+      record: { id: parseInt(id), url, public_ip, private_ip, contact, department }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "❌ Failed to update record" });
+  }
+});
+
+app.post("/api/records/batch", async (req, res) => {
+  const records = req.body.records; // array of records
+  try {
+    const placeholders = records.map(() => "(?, ?, ?, ?, ?)").join(",");
+    const values = records.flatMap(r => [r.url, r.public_ip, r.private_ip, r.contact, r.department]);
+    const sql = `INSERT INTO records (url, public_ip, private_ip, contact, department) VALUES ${placeholders}`;
+    await db.query(sql, values);
+    res.json({ message: "Batch records added successfully", records });
+  } catch (err) {
+    res.status(500).json({ message: "Error saving records", error: err });
+  }
+});
+
+
 // ----------------- WEBSITE STATUS CHECK -----------------
 app.post("/api/check", async (req, res) => {
   let { url } = req.body;

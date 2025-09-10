@@ -7,36 +7,119 @@
 
 /* Sidebar */
 .sidebar {
-  width: 220px;
-  background: #1e293b;
+  background: #0d1321;
   color: #fff;
-  padding: 20px;
+  width: 240px;
+  transition: width 0.3s ease;
   display: flex;
   flex-direction: column;
-  
+  /* border-top-right-radius: 12px; */
+  border-bottom-right-radius: 12px;
 }
 
-.sidebar h2 {
-  margin-bottom: 20px;
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 12px 20px;
+}
+.sidebar.collapsed .logo {
   font-size: 20px;
   text-align: center;
+  width: 40px;
+  padding: 12px 20px;
 }
 
-.sidebar nav a {
-  color: #cbd5e1;
+.collapse-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+
+nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: #bbb;
   text-decoration: none;
-  margin: 10px 0;
-  display: block;
+  transition: background 0.2s;
+  border-radius: 8px;
+  margin: 4px 10px;
 }
 
-.sidebar nav a:hover {
+.nav-link:hover {
+  background: #1d2433;
   color: #fff;
 }
 
-.sidebar-icon {
-  font-size: 18px;
-  margin-right: 8px;
+.nav-link.active {
+  background: #2a9df4;
+  color: #fff;
 }
+
+.sidebar.collapsed .nav-link span {
+  display: none;
+}
+
+/* Tooltip on hover when collapsed */
+.sidebar.collapsed .nav-link[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 70px;
+  background: #1d2433;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* Footer */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 10px;
+}
+
+.logout-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #bbb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: 8px;
+}
+
+.logout-btn:hover {
+  background: #1d2433;
+  color: #fff;
+}
+
 /* Main Content */
 .main {
   flex: 1;
@@ -47,7 +130,7 @@
 
 /* Header */
 .header {
-  background: #334155;
+  background: #0d1321;
   color: #fff;
   padding: 15px 20px;
   display: flex;
@@ -62,20 +145,6 @@
   margin: 0;
 }
 
-.logout-btn {
-  position: absolute;       /* ✅ keeps logout button on the right */
-  right: 20px;
-  background: #ef4444;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: #dc2626;
-}
 
 /* Content */
 .content {
@@ -220,3 +289,39 @@ tr.inactive td {
   color: #777;
 }
 
+
+
+/* === Responsive (Mobile) === */
+@media (max-width: 768px) {
+  /* Sidebar collapsed by default */
+  .sidebar {
+    width: 70px !important;
+  }
+
+  /* Expanded sidebar as overlay */
+  .sidebar:not(.collapsed) {
+    width: 240px !important;
+    position: fixed;
+    z-index: 1000;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+  }
+
+  /* Main should use full width */
+  .main {
+    margin-left: 0 !important;
+  }
+
+  /* Optional overlay when sidebar is open */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+}

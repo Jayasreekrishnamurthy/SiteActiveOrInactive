@@ -1,0 +1,179 @@
+/* Wrapper */
+.record-form-wrapper {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Header */
+.record-form-header {
+  margin-bottom: 15px;
+}
+
+/* Add button */
+.record-form-add-btn {
+  padding: 8px 15px;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.record-form-add-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Modal */
+.record-form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.record-form-modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  position: relative;
+}
+
+.record-form-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+/* Form */
+.record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.record-form-input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.record-form-submit-btn {
+  padding: 8px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.record-form-submit-btn:hover {
+  background-color: #218838;
+}
+
+/* Message */
+.record-form-message {
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.record-form-message.success {
+  color: green;
+}
+
+.record-form-message.error {
+  color: red;
+}
+
+/* Table */
+.record-table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+.record-table th, .record-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.record-table th {
+  background-color: #f0f0f0;
+}
+.record-table-delete-btn {
+  padding: 5px 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.record-table-delete-btn:hover {
+  background-color: #c82333;
+}
+.record-table-update-btn {
+  padding: 5px 10px;
+  background-color: #ffc107;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+.record-table-update-btn:hover {
+  background-color: #e0a800;
+}
+.record-form-excel-btn {
+  background-color: #217346; /* Excel green */
+  color: white;
+  padding: 8px 14px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-block;
+  transition: 0.3s;
+}
+
+.record-form-excel-btn:hover {
+  background-color: #1a5a36;
+}
+.pagination {
+  display: flex;
+  justify-content: flex-end; /* Pushes it to the right */
+  align-items: center;
+  gap: 10px; /* space between buttons and text */
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.pagination button {
+  background-color: #007bff; /* blue buttons */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
