@@ -373,6 +373,155 @@ app.post('/api/contact', upload.single('image'), (req, res) => {
 })
 
 
+function getSSLCertificate(hostname, port = 443) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      host: hostname,
+      port,
+      method: "GET",
+      rejectUnauthorized: false,
+      servername: hostname,
+      agent: false,
+    };
+
+    const req = https.request(options, (res) => {
+      const cert = res.socket.getPeerCertificate(true);
+      if (!cert || Object.keys(cert).length === 0) {
+        return reject("No certificate found");
+      }
+
+      resolve({
+        hostname,
+        subjectCN: cert.subject?.CN || "",
+        issuerO: cert.issuer?.O || "",
+        validFrom: cert.valid_from,
+        validTo: cert.valid_to,
+        valid: new Date(cert.valid_to) > new Date(),
+      });
+    });
+
+    req.on("error", (err) => reject(err.message));
+    req.end();
+  });
+}
+
+// --- API Endpoints ---
+
+// Fetch all records
+app.get("/api/ssl-records", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM ssl_records ORDER BY id DESC");
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch SSL records" });
+  }
+});
+
+// Add new record
+app.post("/api/add-record", async (req, res) => {
+  let { url } = req.body;
+  if (!url) return res.status(400).json({ error: "URL is required" });
+
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+
+  try {
+    const hostname = new URL(url).hostname;
+    let certInfo;
+    try {
+      certInfo = await getSSLCertificate(hostname);
+    } catch {
+      certInfo = {
+        hostname,
+        subjectCN: "",
+        issuerO: "",
+        validFrom: null,
+        validTo: null,
+        valid: false,
+      };
+    }
+
+    await db.query(
+      `INSERT INTO ssl_records (url, subjectCN, issuerO, validFrom, validTo, valid)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         subjectCN = VALUES(subjectCN),
+         issuerO = VALUES(issuerO),
+         validFrom = VALUES(validFrom),
+         validTo = VALUES(validTo),
+         valid = VALUES(valid),
+         updated_at = CURRENT_TIMESTAMP`,
+      [url, certInfo.subjectCN, certInfo.issuerO, certInfo.validFrom, certInfo.validTo, certInfo.valid ? 1 : 0]
+    );
+
+    const [rows] = await db.query("SELECT * FROM ssl_records WHERE url = ?", [url]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Add record error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Recheck SSL
+app.get("/api/check-ssl", async (req, res) => {
+  let { url } = req.query;
+  if (!url) return res.status(400).json({ error: "URL required" });
+
+  try {
+    const hostname = new URL(url).hostname;
+    const certInfo = await getSSLCertificate(hostname);
+
+    await db.query(
+      `UPDATE ssl_records
+       SET subjectCN=?, issuerO=?, validFrom=?, validTo=?, valid=?, updated_at=CURRENT_TIMESTAMP
+       WHERE url=?`,
+      [
+        certInfo.subjectCN,
+        certInfo.issuerO,
+        certInfo.validFrom,
+        certInfo.validTo,
+        certInfo.valid ? 1 : 0,
+        url,
+      ]
+    );
+
+    // ✅ Return updated row including updated_at
+    const [rows] = await db.query(
+      "SELECT * FROM ssl_records WHERE url = ?",
+      [url]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Recheck error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE SSL record
+app.delete("/api/delete-record", async (req, res) => {
+  const { url } = req.body; // URL of the record to delete
+  if (!url) return res.status(400).json({ error: "URL is required" });
+
+  try {
+    const [result] = await db.query("DELETE FROM ssl_records WHERE url = ?", [url]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Record not found" });
+    }
+
+    res.json({ message: `Deleted ${url} successfully` });
+  } catch (err) {
+    console.error("Delete record error:", err);
+    res.status(500).json({ error: "Failed to delete record" });
+  }
+});
+
+// --- Serve frontend ---
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+
 // ----------------- SERVER START -----------------
 const PORT = 5000;
 app.listen(PORT, () =>

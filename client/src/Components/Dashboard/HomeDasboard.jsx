@@ -44,7 +44,7 @@ const Dashboard = () => {
     { path: "check-status", label: "Check Status", icon: faGlobe },
     { path: "ticketraise", label: "Ticket Raised", icon: faPaperPlane },
     { path: "datacomponent", label: "Data Component", icon: faHistory },
-    { path: "history", label: "History", icon: faHistory },
+    { path: "sslmonitoring", label: "SSL Monitoring", icon: faHistory },
     { path: "settings", label: "Settings", icon: faGear },
     { path: "profile", label: "Profile", icon: faUser },
   ];

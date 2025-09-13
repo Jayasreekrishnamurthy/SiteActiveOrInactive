@@ -6,72 +6,66 @@ import Stack from "@mui/material/Stack";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-
-
 const CheckStatus = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");   // ✅ search
-  const [statusFilter, setStatusFilter] = useState("all"); // ✅ filter
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const rowsPerPage = 10;
 
-  // Fetch history on load
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const historyRes = await axios.get("http://localhost:5000/api/history");
-      const recordRes = await axios.get("http://localhost:5000/api/records");
+  // ✅ Fetch history only (DB is the source of truth)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const recordsRes = await axios.get("http://localhost:5000/api/records");
+        const historyRes = await axios.get("http://localhost:5000/api/history");
 
-      // Build a map of history URLs for quick lookup
-      const historyMap = {};
-      historyRes.data.forEach(h => {
-        historyMap[h.url] = h;
-      });
+        const records = recordsRes.data;
+        const history = historyRes.data;
 
-      // Merge: prefer history status if it exists, otherwise "Not Checked"
-      const mergedData = recordRes.data.map(r => {
-        if (historyMap[r.url]) {
-          return historyMap[r.url]; // ✅ keep checked data
-        } else {
-          return {
-            id: `record-${r.id}`,
-            url: r.url,
-            status: "Not Checked",
-            message: "-",
-            code: "-",
-            time: "-"
-          };
-        }
-      });
+        // merge records + history
+    const merged = [
+  ...history,
+  ...records
+    .filter((rec) => !history.find((h) => h.url === rec.url))
+    .map((rec) => ({
+      id: `rec-${rec.id}`,
+      url: rec.url,
+      status: "Not Checked",
+      message: "-",
+      code: "-",
+      time: "-",
+    })),
+];
+setHistory(merged);
 
-      setHistory(mergedData);
-    } catch (err) {
-      console.error("Error fetching:", err);
-    }
-  };
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
 
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
-  // ✅ Auto recheck every 5 mins
+
+  // ✅ Auto recheck every 5 minutes
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        // Loop through all history records and refresh them
         for (let item of history) {
           await checkRowStatus(item);
         }
       } catch (err) {
         console.error("Error auto rechecking websites:", err);
       }
-    }, 5000); // 1 minute
+    }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
   }, [history]);
 
-  // Manual check single website (Insert into DB)
+  // ✅ Manual check website
   const checkWebsite = async () => {
     if (!url) return;
 
@@ -79,7 +73,7 @@ useEffect(() => {
       try {
         new URL(str.startsWith("http") ? str : `http://${str}`);
         return true;
-      } catch (err) {
+      } catch {
         return false;
       }
     };
@@ -90,7 +84,6 @@ useEffect(() => {
     }
 
     setLoading(true);
-
     try {
       const response = await axios.post("http://localhost:5000/api/check", { url });
       const result = response.data;
@@ -121,55 +114,46 @@ useEffect(() => {
     setLoading(false);
   };
 
-  // Re-check row (Update in DB)
+  // ✅ Re-check row
   const checkRowStatus = async (item) => {
-    try {
-      const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
-      const result = response.data;
+  try {
+    const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
+    const result = response.data;
 
-      const updatedEntry = {
-        url: item.url,
-        status: result.status,
-        message: result.message,
-        code: result.code,
-        time: new Date().toLocaleString(),
-      };
+    const updatedEntry = {
+      url: item.url,
+      status: result.status,
+      message: result.message,
+      code: result.code,
+      time: new Date().toLocaleString(),
+    };
 
-      const res = await axios.put(
-        `http://localhost:5000/api/history/${item.id}`,
-        updatedEntry
-      );
-
-      setHistory((prev) =>
-        prev.map((h) => (h.id === item.id ? res.data : h))
-      );
-    } catch {
-      const errorEntry = {
-        url: item.url,
-        status: "inactive",
-        message: "Error checking website",
-        code: "N/A",
-        time: new Date().toLocaleString(),
-      };
-
-      const res = await axios.put(
-        `http://localhost:5000/api/history/${item.id}`,
-        errorEntry
-      );
-
-      setHistory((prev) =>
-        prev.map((h) => (h.id === item.id ? res.data : h))
-      );
+    let res;
+    if (item.id.toString().startsWith("rec-")) {
+      // record only, insert new history row
+      res = await axios.post("http://localhost:5000/api/history", updatedEntry);
+    } else {
+      // already in history, update
+      res = await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
     }
-  };
 
-  // Delete row (Delete from DB)
+    // update frontend
+    setHistory((prev) =>
+      prev.map((h) => (h.url === item.url ? res.data : h))
+    );
+  } catch (err) {
+    console.error("Error checking website:", err);
+  }
+};
+
+
+  // ✅ Delete row
   const deleteRow = async (id) => {
     await axios.delete(`http://localhost:5000/api/history/${id}`);
     setHistory((prev) => prev.filter((h) => h.id !== id));
   };
 
-  // Import Excel/CSV (Insert all into DB)
+  // ✅ Import Excel/CSV
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -191,7 +175,6 @@ useEffect(() => {
             code: "-",
             time: "-",
           };
-
           const res = await axios.post("http://localhost:5000/api/history", entry);
           setHistory((prev) => [...prev, res.data]);
         }
@@ -200,7 +183,7 @@ useEffect(() => {
     reader.readAsArrayBuffer(file);
   };
 
-  // ✅ Filter + Search Logic
+  // ✅ Filter + Search
   const filteredHistory = history.filter((item) => {
     const matchesSearch =
       item.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,8 +202,7 @@ useEffect(() => {
   const currentRows = filteredHistory.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(filteredHistory.length / rowsPerPage);
 
-
-  // ✅ Export to Excel
+  // ✅ Export Excel
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredHistory);
     const workbook = XLSX.utils.book_new();
@@ -228,8 +210,7 @@ useEffect(() => {
     XLSX.writeFile(workbook, "Website_History.xlsx");
   };
 
-  // ✅ Export to PDF
-
+  // ✅ Export PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text("Website Status History", 14, 10);
@@ -248,7 +229,6 @@ useEffect(() => {
 
     doc.save("Website_History.pdf");
   };
-
 
   return (
     <div>
@@ -271,7 +251,8 @@ useEffect(() => {
           <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
         </div>
       </div>
-      {/* ✅ Search + Filter Controls */}
+
+      {/* ✅ Search + Filter */}
       <div className="filter-bar" style={{ margin: "20px 0", display: "flex", gap: "15px" }}>
         <input
           type="text"
@@ -279,7 +260,7 @@ useEffect(() => {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setCurrentPage(1); // reset page on search
+            setCurrentPage(1);
           }}
         />
 
@@ -293,7 +274,9 @@ useEffect(() => {
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
+          <option value="Not Checked">Not Checked</option>
         </select>
+
         {/* ✅ Export Buttons */}
         <button className="export-btn excel-btn" onClick={exportToExcel}>Export Excel</button>
         <button className="export-btn pdf-btn" onClick={exportToPDF}>Export PDF</button>
@@ -367,17 +350,13 @@ useEffect(() => {
                       >
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
+                        <option value="Not Checked">Not Checked</option>
                       </select>
-                      <button
-                        className="recheck-btn"
-                        onClick={() => checkRowStatus(item)}
-                      >
+
+                      <button className="recheck-btn" onClick={() => checkRowStatus(item)}>
                         Check
                       </button>
-                      <button
-                        className="delete-btn"
-                        onClick={() => deleteRow(item.id)}
-                      >
+                      <button className="delete-btn" onClick={() => deleteRow(item.id)}>
                         Delete
                       </button>
                     </td>

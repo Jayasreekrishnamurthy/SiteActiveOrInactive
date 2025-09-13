@@ -1,0 +1,164 @@
+/* Container */
+.containerssl {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  margin: 0 auto;
+}
+
+/* Header */
+.containerssl h1 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  gap: 15px;
+}
+
+.filters input {
+  margin-left: 10px;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  height: 10px;
+}
+
+/* Message */
+.message {
+  margin-bottom: 1rem;
+  color: orange;
+  font-weight: bold;
+  /* text-align: center; */
+}
+
+/* Manual entry */
+.manual-entry {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.manual-entry input {
+  padding: 8px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.manual-entry button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.manual-entry button:hover {
+  opacity: 0.8;
+}
+
+.manual-entry .add-btn {
+  background-color: #1890ff;
+  color: white;
+}
+
+/* Table */
+.ssl-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+}
+
+.ssl-table th,
+.ssl-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.ssl-table th {
+  background-color: #f4f4f4;
+}
+
+.ssl-table tr.expired {
+  background-color: #ffd6d6;
+}
+
+.ssl-table tr.expiring-soon {
+  background-color: #fff4cc;
+}
+
+/* Table buttons */
+.ssl-table button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.ssl-table button:hover {
+  opacity: 0.8;
+}
+
+.ssl-table .recheck-btn {
+  margin-right: 5px;
+  background-color: #1890ff;
+  color: white;
+}
+
+.ssl-table .delete-btn {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .manual-entry {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .manual-entry input {
+    width: 80%;
+  }
+
+  .ssl-table th,
+  .ssl-table td {
+    padding: 8px;
+  }
+
+  .ssl-table {
+    font-size: 14px;
+  }
+   .top-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filters {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ssl-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
