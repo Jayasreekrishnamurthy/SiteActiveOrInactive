@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useNavigate } from "react-router-dom";
 import "../Style/SslMonitoring.css";
 
 function SslMonitoring() {
@@ -12,6 +16,7 @@ function SslMonitoring() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
    // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -149,6 +154,45 @@ function SslMonitoring() {
   };
 
 
+
+
+  
+// Export to Excel
+const exportToExcel = () => {
+  const worksheet = XLSX.utils.json_to_sheet(filteredRecords);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "SSL Records");
+  XLSX.writeFile(workbook, "ssl_records.xlsx");
+};
+
+// Export to PDF
+const exportToPDF = () => {
+  const doc = new jsPDF();
+  doc.text("SSL Monitoring Records", 14, 10);
+
+  const tableColumn = ["Website", "Issuer", "Valid From", "Valid To", "Valid"];
+  const tableRows = [];
+
+  filteredRecords.forEach((rec) => {
+    tableRows.push([
+      rec.url,
+      rec.issuerO || "-",
+      rec.validFrom || "-",
+      rec.validTo || "-",
+      rec.valid ? "Yes" : "No",
+    ]);
+  });
+
+  autoTable(doc, {
+    head: [tableColumn],
+    body: tableRows,
+    startY: 20,
+  });
+
+  doc.save("ssl_records.pdf");
+};
+
+
    // Pagination calculations
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -182,6 +226,10 @@ function SslMonitoring() {
           <button className="add-btn" onClick={addRecord}>
             Add & Check
           </button>
+           {/* <div className="exportssl-section"> */}
+  <button onClick={exportToExcel} className="exportssl-btn">Export Excel</button>
+  <button onClick={exportToPDF} className="exportssl-btn">Export PDF</button>
+{/* </div> */}
         </div>
 
         <div className="filters">
@@ -191,6 +239,7 @@ function SslMonitoring() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+         
           <input
             type="date"
             value={dateFrom}
@@ -201,6 +250,9 @@ function SslMonitoring() {
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
           /> */}
+             <button className="ticketssl-btn" onClick={() => navigate("/dashboard/ticketraise")}>
+      Ticket Raise
+    </button>
         </div>
       </div>
 

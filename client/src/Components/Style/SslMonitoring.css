@@ -8,8 +8,9 @@
 /* Header */
 .containerssl h1 {
   margin-bottom: 1.5rem;
-  text-align: center;
+  /* text-align: center; */
 }
+
 .top-section {
   display: flex;
   justify-content: space-between;
@@ -125,6 +126,29 @@
   color: white;
 }
 
+.exportssl-btn {
+  margin-right: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.ticketssl-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ticketssl-btn:hover {
+  opacity: 0.8;
+}
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -145,7 +169,8 @@
   .ssl-table {
     font-size: 14px;
   }
-   .top-section {
+
+  .top-section {
     flex-direction: column;
     align-items: flex-start;
   }
