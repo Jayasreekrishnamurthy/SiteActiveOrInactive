@@ -15,32 +15,46 @@ const CheckStatus = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const rowsPerPage = 10;
 
-  // ✅ Fetch history only (DB is the source of truth)
+  // ✅ Utility to normalize URLs (lowercase + trim + remove trailing slash)
+  const normalizeUrl = (link) =>
+    link.trim().toLowerCase().replace(/\/$/, "");
+
+  // ✅ Fetch history + records (DB is the source of truth)
   useEffect(() => {
     const fetchData = async () => {
       try {
         const recordsRes = await axios.get("http://localhost:5000/api/records");
         const historyRes = await axios.get("http://localhost:5000/api/history");
 
-        const records = recordsRes.data;
-        const history = historyRes.data;
+        const records = recordsRes.data || [];
+        const histories = historyRes.data || [];
 
-        // merge records + history
-    const merged = [
-  ...history,
-  ...records
-    .filter((rec) => !history.find((h) => h.url === rec.url))
-    .map((rec) => ({
-      id: `rec-${rec.id}`,
-      url: rec.url,
-      status: "Not Checked",
-      message: "-",
-      code: "-",
-      time: "-",
-    })),
-];
-setHistory(merged);
+        // merge unique by normalized url
+        const merged = [
+          ...histories,
+          ...records
+            .filter(
+              (rec) =>
+                !histories.find(
+                  (h) => normalizeUrl(h.url) === normalizeUrl(rec.url)
+                )
+            )
+            .map((rec) => ({
+              id: `rec-${rec.id}`,
+              url: rec.url,
+              status: "Not Checked",
+              message: "-",
+              code: "-",
+              time: "-",
+            })),
+        ];
 
+        // remove duplicates (case-insensitive)
+        const unique = Array.from(
+          new Map(merged.map((item) => [normalizeUrl(item.url), item])).values()
+        );
+
+        setHistory(unique);
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -48,7 +62,6 @@ setHistory(merged);
 
     fetchData();
   }, []);
-
 
   // ✅ Auto recheck every 5 minutes
   useEffect(() => {
@@ -60,7 +73,7 @@ setHistory(merged);
       } catch (err) {
         console.error("Error auto rechecking websites:", err);
       }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [history]);
@@ -80,6 +93,14 @@ setHistory(merged);
 
     if (!isValidUrl(url)) {
       alert("❌ Invalid URL! Please enter a valid website (e.g., https://example.com)");
+      return;
+    }
+
+    const normalized = normalizeUrl(url);
+
+    // 🚫 Prevent duplicate
+    if (history.some((h) => normalizeUrl(h.url) === normalized)) {
+      alert("⚠️ This website already exists in history!");
       return;
     }
 
@@ -116,36 +137,32 @@ setHistory(merged);
 
   // ✅ Re-check row
   const checkRowStatus = async (item) => {
-  try {
-    const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
-    const result = response.data;
+    try {
+      const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
+      const result = response.data;
 
-    const updatedEntry = {
-      url: item.url,
-      status: result.status,
-      message: result.message,
-      code: result.code,
-      time: new Date().toLocaleString(),
-    };
+      const updatedEntry = {
+        url: item.url,
+        status: result.status,
+        message: result.message,
+        code: result.code,
+        time: new Date().toLocaleString(),
+      };
 
-    let res;
-    if (item.id.toString().startsWith("rec-")) {
-      // record only, insert new history row
-      res = await axios.post("http://localhost:5000/api/history", updatedEntry);
-    } else {
-      // already in history, update
-      res = await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
+      let res;
+      if (item.id.toString().startsWith("rec-")) {
+        res = await axios.post("http://localhost:5000/api/history", updatedEntry);
+      } else {
+        res = await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
+      }
+
+      setHistory((prev) =>
+        prev.map((h) => (normalizeUrl(h.url) === normalizeUrl(item.url) ? res.data : h))
+      );
+    } catch (err) {
+      console.error("Error checking website:", err);
     }
-
-    // update frontend
-    setHistory((prev) =>
-      prev.map((h) => (h.url === item.url ? res.data : h))
-    );
-  } catch (err) {
-    console.error("Error checking website:", err);
-  }
-};
-
+  };
 
   // ✅ Delete row
   const deleteRow = async (id) => {
@@ -168,6 +185,13 @@ setHistory(merged);
 
       for (let link of urls) {
         if (link && typeof link === "string") {
+          const normalized = normalizeUrl(link);
+
+          // 🚫 Skip duplicates
+          if (history.some((h) => normalizeUrl(h.url) === normalized)) {
+            continue;
+          }
+
           const entry = {
             url: link,
             status: "Not Checked",
@@ -175,6 +199,7 @@ setHistory(merged);
             code: "-",
             time: "-",
           };
+
           const res = await axios.post("http://localhost:5000/api/history", entry);
           setHistory((prev) => [...prev, res.data]);
         }
@@ -252,7 +277,7 @@ setHistory(merged);
         </div>
       </div>
 
-      {/* ✅ Search + Filter */}
+      {/* Search + Filter */}
       <div className="filter-bar" style={{ margin: "20px 0", display: "flex", gap: "15px" }}>
         <input
           type="text"
@@ -277,7 +302,6 @@ setHistory(merged);
           <option value="Not Checked">Not Checked</option>
         </select>
 
-        {/* ✅ Export Buttons */}
         <button className="export-btn excel-btn" onClick={exportToExcel}>Export Excel</button>
         <button className="export-btn pdf-btn" onClick={exportToPDF}>Export PDF</button>
       </div>
@@ -365,7 +389,6 @@ setHistory(merged);
               </tbody>
             </table>
 
-            {/* Pagination */}
             <div className="pagination-container">
               <Stack spacing={2} alignItems="center" sx={{ marginTop: 2 }}>
                 <Pagination

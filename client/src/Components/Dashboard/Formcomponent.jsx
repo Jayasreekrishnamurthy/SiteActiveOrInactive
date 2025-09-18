@@ -22,6 +22,7 @@ const RecordForm = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 10;
 
+    
     useEffect(() => {
         fetchRecords();
     }, []);
@@ -232,6 +233,7 @@ const RecordForm = () => {
             <table className="record-table">
                 <thead>
                     <tr>
+                        <th>S.No</th> 
                         <th>URL</th>
                         <th>Public IP</th>
                         <th>Private IP</th>
@@ -241,8 +243,9 @@ const RecordForm = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {currentRecords.map((rec) => (
+                    {currentRecords.map((rec, index) => (
                         <tr key={rec.id}>
+                            <td>{indexOfFirstRecord + index + 1}</td>
                             <td>{rec.url}</td>
                             <td>{rec.public_ip}</td>
                             <td>{rec.private_ip}</td>
