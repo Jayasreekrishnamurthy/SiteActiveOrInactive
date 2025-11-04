@@ -44,9 +44,17 @@ const Dashboard = () => {
     { path: "check-status", label: "Check Status", icon: faGlobe },
     { path: "ticketraise", label: "Ticket Raised", icon: faPaperPlane },
     { path: "datacomponent", label: "Data Component", icon: faHistory },
-    { path: "sslmonitoring", label: "SSL Monitoring", icon: faHistory },
-    { path: "settings", label: "Settings", icon: faGear },
-    { path: "profile", label: "Profile", icon: faUser },
+      {
+    path: "sslmonitoring",
+    label: "SSL Monitoring",
+    icon: faHistory,
+    children: [
+      { path: "tlsmonitoring", label: "TLS Monitoring" }, // sub-item
+      // add more sub-items here if needed
+    ],
+  },
+    { path: "vulnerability", label: "Vulnerability Scanner", icon: faGear },
+    // { path: "profile", label: "Profile", icon: faUser },
   ];
 
   return (
@@ -71,21 +79,38 @@ const Dashboard = () => {
 </div>
 
 
-        <nav>
-          {menuItems.map((item, idx) => (
+       <nav>
+  {menuItems.map((item, idx) => (
+    <div key={idx} className="nav-item">
+      {/* Top-level link */}
+      <Link
+        to={item.path}
+        className={`nav-link ${location.pathname.startsWith("/" + item.path) ? "active" : ""}`}
+        title={isCollapsed ? item.label : ""}
+      >
+        <FontAwesomeIcon icon={item.icon} className="sidebar-icon" />
+        {!isCollapsed && <span>{item.label}</span>}
+      </Link>
+
+      {/* Children menu (hidden by default, shows on hover) */}
+      {!isCollapsed && item.children && item.children.length > 0 && (
+        <div className="sub-menu">
+          {item.children.map((child, cidx) => (
             <Link
-              key={idx}
-              to={item.path}
-              className={`nav-link ${
-                location.pathname === "/" + item.path ? "active" : ""
-              }`}
-              title={isCollapsed ? item.label : ""}
+              key={cidx}
+              to={`${item.path}/${child.path}`}
+              className={`nav-link ${location.pathname === "/" + item.path + "/" + child.path ? "active" : ""}`}
+              title={isCollapsed ? child.label : ""}
             >
-              <FontAwesomeIcon icon={item.icon} className="sidebar-icon" />
-              {!isCollapsed && <span>{item.label}</span>}
+              <span>{child.label}</span>
             </Link>
           ))}
-        </nav>
+        </div>
+      )}
+    </div>
+  ))}
+</nav>
+
 
         <div className="sidebar-footer">
           <button
@@ -102,7 +127,7 @@ const Dashboard = () => {
       {/* Main */}
       <div className="main">
         <header className="header">
-          <h1>Website Status Checker</h1>
+          <h1>Monitoring And Maintenance Tool</h1>
         </header>
 
         {/* Child routes render here */}

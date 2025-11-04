@@ -63,20 +63,53 @@ const CheckStatus = () => {
     fetchData();
   }, []);
 
-  // ✅ Auto recheck every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        for (let item of history) {
-          await checkRowStatus(item);
-        }
-      } catch (err) {
-        console.error("Error auto rechecking websites:", err);
-      }
-    }, 5 * 60 * 1000);
+  
+  // ✅ Auto recheck every 5 minutes (only when history has entries)
+ useEffect(() => {
+  if (history.length === 0) return;
 
-    return () => clearInterval(interval);
-  }, [history]);
+  const interval = setInterval(() => {
+    recheckAllSites();
+  }, 5 * 60 * 1000);
+
+  return () => clearInterval(interval);
+}, [history]); // 👈 include `history` not just `history.length`
+
+const recheckAllSites = async () => {
+  console.log("🔁 Auto rechecking all websites...");
+  for (const item of history) {
+    try {
+      const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
+      const result = response.data;
+
+      const updatedEntry = {
+        ...item,
+        status: result.status,
+        message: result.message,
+        code: result.code,
+        time: new Date().toLocaleString(),
+      };
+
+      await axios.post("http://localhost:5000/api/incidentlog", updatedEntry);
+
+      if (item.id.toString().startsWith("rec-")) {
+        await axios.post("http://localhost:5000/api/history", updatedEntry);
+      } else {
+        await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
+      }
+
+      setHistory((prev) =>
+        prev.map((h) =>
+          h.url.toLowerCase() === item.url.toLowerCase() ? updatedEntry : h
+        )
+      );
+    } catch (err) {
+      console.error(`❌ Error rechecking ${item.url}:`, err.message);
+    }
+  }
+  console.log("✅ Auto recheck complete at", new Date().toLocaleTimeString());
+};
+
 
   // ✅ Manual check website
   const checkWebsite = async () => {
@@ -256,7 +289,7 @@ const CheckStatus = () => {
   };
 
   return (
-    <div>
+    <div className="checkpage">
       <div className="checker-box">
         <h2>Check Website</h2>
         <div className="input-group">

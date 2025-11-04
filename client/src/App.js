@@ -8,9 +8,12 @@ import Register from "./Components/Auth/Register.jsx";
 import Ticket from "./Components/TicketRaise/TicketRaise.jsx"
 import DataComponent from "./Components/Dashboard/Formcomponent.jsx";
 import SslMonitoring from "./Components/Dashboard/SslMonitoring.jsx";
+import VulnerabilityScanner from "./Components/Dashboard/vulnerability.jsx";
+import TlsMonitoring from "./Components/Dashboard/TlsMonitoring.jsx";
+import ComingSoon from "./Components/Lunchingpage/ComingSoon.jsx";
 
 // const History = () => <h2>History Page (future data)</h2>;
-const Settings = () => <h2>Settings Page</h2>;
+// const VulnerabilityScanner = () => <h2>Settings Page</h2>;
 const Profile =() => <h2>PROFILE</h2>
 // const DataComponent = () => <h2>Data Component Page</h2>;
 
@@ -25,6 +28,7 @@ const App = () => {
     <Router>
       <Routes>
         {/* Public routes */}
+        <Route path="/comingsoon" element={<ComingSoon />} />
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -42,8 +46,10 @@ const App = () => {
           <Route path="ticketraise" element={<Ticket />} />
           <Route path="datacomponent" element={<DataComponent />} />
           <Route path="sslmonitoring" element={<SslMonitoring />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="sslmonitoring/tlsmonitoring" element={<TlsMonitoring />} />
+          <Route path="vulnerability" element={<VulnerabilityScanner />} />
           <Route path="profile" element={<Profile />} />
+          
         </Route>
       </Routes>
     </Router>

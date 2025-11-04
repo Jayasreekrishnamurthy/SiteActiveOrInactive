@@ -3,12 +3,14 @@
   padding: 2rem;
   font-family: Arial, sans-serif;
   margin: 0 auto;
+  background: #fff;
 }
 
 /* Header */
 .containerssl h1 {
   margin-bottom: 1.5rem;
   /* text-align: center; */
+  color: #29ABE2;
 }
 
 .top-section {
@@ -92,9 +94,11 @@
 .ssl-table th {
   background-color: #f4f4f4;
 }
-
+.ssl-table td {
+  color: #29ABE2;
+}
 .ssl-table tr.expired {
-  background-color: #ffd6d6;
+  background-color: #e98c8c;
 }
 
 .ssl-table tr.expiring-soon {
@@ -186,4 +190,36 @@
     display: block;
     overflow-x: auto;
   }
+}
+
+
+
+
+/* tls css */
+.tlscertificate{
+  color: #29ABE2;
+}
+.tlscertificatetable{
+  color: #29ABE2;
+}
+
+.searchtls-container {
+  display: flex;
+  justify-content: flex-end; /* aligns to right */
+  margin-bottom: 15px;
+}
+
+.searchtls-input {
+  padding: 8px 12px;
+  width: 280px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.searchtls-input:focus {
+  outline: none;
+  border-color: #94b1dd; /* green border on focus */
+  box-shadow: 0 0 5px rgba(134, 182, 221, 0.5);
 }

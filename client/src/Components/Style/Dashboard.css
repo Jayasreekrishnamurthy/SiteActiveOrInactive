@@ -79,6 +79,42 @@ nav {
   color: #fff;
 }
 
+.nav-item {
+  position: relative; /* needed for absolute positioning of sub-menu */
+}
+
+/* Hide sub-menu by default */
+.nav-item .sub-menu {
+  display: none;
+  position: absolute; /* appears over other content */
+  left: 100%; /* next to parent menu */
+  top: 0;
+  background-color: #0d1321; /* adjust to match sidebar */
+  border: 1px solid #ccc;
+  min-width: 180px;
+  z-index: 1000;
+}
+
+/* Show sub-menu on hover */
+.nav-item:hover .sub-menu {
+  display: block;
+}
+
+/* Optional: style links in sub-menu */
+.sub-menu .nav-link {
+  display: block;
+  padding: 8px 12px;
+  color: #bbb;
+  white-space: nowrap;
+}
+
+.sub-menu .nav-link:hover {
+  background-color: #1d2433;
+  color: #fff;
+
+}
+
+
 .sidebar.collapsed .nav-link span {
   display: none;
 }
@@ -121,12 +157,73 @@ nav {
 }
 
 /* Main Content */
+/* === Monitoring-Based Animated Background === */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f9fafb;
+  position: relative;
+  overflow: hidden;
+  /* color: #fff; */
+  background: radial-gradient(circle at center, #031C36 0%, #010b19 100%);
 }
+
+/* Moving digital grid overlay */
+.main::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 200%;
+  height: 200%;
+  background-image: linear-gradient(
+      rgba(41, 171, 226, 0.08) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(41, 171, 226, 0.08) 1px,
+      transparent 1px
+    );
+  background-size: 80px 80px;
+  animation: gridMove 20s linear infinite;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-80px, -80px);
+  }
+}
+
+/* Faint glowing pulse */
+.main::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(41, 171, 226, 0.15) 0%,
+    transparent 70%
+  );
+  opacity: 0.3;
+  animation: pulseGlow 6s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+@keyframes pulseGlow {
+  from { opacity: 0.2; transform: scale(1); }
+  to { opacity: 0.5; transform: scale(1.05); }
+}
+
+/* Content stays above background layers */
+.main > * {
+  position: relative;
+  z-index: 2;
+}
+
 
 /* Header */
 .header {
@@ -143,6 +240,7 @@ nav {
   font-size: 22px;
   font-weight: bold;
   margin: 0;
+  color: #29ABE2;
 }
 
 
@@ -152,6 +250,9 @@ nav {
   padding: 20px;
   overflow-y: auto;
 }
+.checkpage{
+  background: #fff;
+}
 
 .checker-box {
   background: #fff;
@@ -159,6 +260,11 @@ nav {
   margin-bottom: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.checker-box h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #29ABE2;
 }
 
 .input-group {
@@ -190,6 +296,9 @@ nav {
 .upload-group {
   margin-top: 15px;
 }
+.upload-group h3{
+color: #29ABE2;
+}
 
 /* History Table */
 .history-table {
@@ -197,6 +306,9 @@ nav {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.history-table h2{
+  color: #29ABE2;
 }
 
 .history-table table {

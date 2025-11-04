@@ -2,11 +2,14 @@
 .record-form-wrapper {
   padding: 20px;
   font-family: Arial, sans-serif;
+  background: #fff;
 }
 
 /* Header */
 .record-form-header {
   margin-bottom: 15px;
+  color: #29ABE2;
+;
 }
 
 /* Add button */
@@ -98,6 +101,7 @@
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
+  color: #29ABE2;
 }
 
 .record-table th, .record-table td {
@@ -157,6 +161,7 @@
   gap: 10px; /* space between buttons and text */
   margin-top: 15px;
   font-size: 14px;
+
 }
 
 .pagination button {
