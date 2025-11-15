@@ -328,11 +328,11 @@ color: #29ABE2;
 }
 
 tr.active td {
-  background: #dcfce7;
+  background: #6df78ac7;
 }
 
 tr.inactive td {
-  background: #fee2e2;
+  background: #ff3f33c4;
 }
 
 .recheck-btn {

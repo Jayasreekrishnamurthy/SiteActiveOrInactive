@@ -34,18 +34,32 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const totalCount = history.length;
-  const activeCount = history.filter((item) => item.status === "active").length;
-  const inactiveCount = history.filter((item) => item.status === "inactive").length;
-  const serverCount = new Set(
-    history.map((item) => {
-      try {
-        return new URL(item.url).hostname;
-      } catch {
-        return null;
-      }
-    })
-  ).size;
+// ✅ Get unique URLs
+const uniqueUrls = [...new Set(history.map(item => item.url))];
+
+// ✅ Total unique websites
+const totalCount = uniqueUrls.length;
+
+// ✅ Active/Inactive based on latest status per URL
+const latestStatusMap = {};
+history.forEach((item) => {
+  latestStatusMap[item.url] = item.status; // overwrites older entries (keeps latest)
+});
+
+// ✅ Count active/inactive based on unique URLs
+const activeCount = Object.values(latestStatusMap).filter(s => s === "active").length;
+const inactiveCount = Object.values(latestStatusMap).filter(s => s === "inactive").length;
+
+// ✅ Unique servers
+const serverCount = new Set(
+  uniqueUrls.map(url => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return null;
+    }
+  })
+).size;
 
   // Percentage values for gauges
   const activePercent = totalCount ? (activeCount / totalCount) * 100 : 0;

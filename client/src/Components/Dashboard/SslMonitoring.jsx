@@ -32,36 +32,42 @@ function SslMonitoring() {
   };
 
   // Fetch & sync SSL records with deduplication
-  useEffect(() => {
-    const fetchAndSync = async () => {
-      try {
-        const recordsRes = await axios.get("http://localhost:5000/api/records");
-        const sslRes = await axios.get("http://localhost:5000/api/ssl-records");
+useEffect(() => {
+  const fetchAndSync = async () => {
+    try {
+      const recordsRes = await axios.get("http://localhost:5000/api/records");
+      const sslRes = await axios.get("http://localhost:5000/api/ssl-records");
 
-        const sslUrls = new Set(sslRes.data.map((r) => r.url));
+      const sslUrls = new Set(sslRes.data.map((r) => r.url));
 
-        for (let rec of recordsRes.data) {
-          let url = rec.url.startsWith("http") ? rec.url : `https://${rec.url}`;
-          if (!sslUrls.has(url)) {
-            await axios.post("http://localhost:5000/api/add-record", { url });
-          }
+      for (let rec of recordsRes.data) {
+        let url = rec.url.startsWith("http") ? rec.url : `https://${rec.url}`;
+        if (!sslUrls.has(url)) {
+          await axios.post("http://localhost:5000/api/add-record", { url });
         }
-
-        const updatedSsl = await axios.get("http://localhost:5000/api/ssl-records");
-        const uniqueRecords = deduplicateRecords(updatedSsl.data);
-
-        setRecords(uniqueRecords);
-        setFilteredRecords(uniqueRecords);
-      } catch (err) {
-        console.error("Error fetching SSL records:", err);
-        setMessage("❌ Failed to fetch/sync records");
-      } finally {
-        setPageLoading(false);
       }
-    };
 
-    fetchAndSync();
-  }, []);
+      const updatedSsl = await axios.get("http://localhost:5000/api/ssl-records");
+      const uniqueRecords = deduplicateRecords(updatedSsl.data);
+
+      setRecords(uniqueRecords);
+      setFilteredRecords(uniqueRecords);
+    } catch (err) {
+      console.error("Error fetching SSL records:", err);
+      setMessage("❌ Failed to fetch/sync records");
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  fetchAndSync();
+
+  // ✅ Automatically refresh every 60 seconds
+  const interval = setInterval(fetchAndSync, 60000);
+
+  // Cleanup interval when leaving page
+  return () => clearInterval(interval);
+}, []);
 
   // Filter records
   useEffect(() => {

@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim"; // ✅ use slim version
+import { loadSlim } from "tsparticles-slim";
+import { useNavigate } from "react-router-dom"; // ✅ navigation hook
 import "./ComingSoonMMT.css";
 
 const ComingSoon = () => {
   const [progress, setProgress] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const target = 70;
+    const target = 100;
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= target) {
@@ -21,8 +23,13 @@ const ComingSoon = () => {
   }, []);
 
   const particlesInit = useCallback(async (engine) => {
-    await loadSlim(engine); // ✅ loadSlim instead of loadFull
+    await loadSlim(engine);
   }, []);
+
+  // ✅ handle login button click
+  const handleLoginClick = () => {
+    navigate("/");
+  };
 
   return (
     <div className="coming-soon-container">
@@ -55,7 +62,7 @@ const ComingSoon = () => {
       />
 
       <div className="overlay">
-        <h3 className="subtitle">Something great is on the way</h3>
+        <h3 className="subtitle">MMT (Monitoring And Maintenance Tool)</h3>
         <h1 className="title">MMT TOOL LAUNCHING SOON</h1>
 
         <div className="progress-section">
@@ -68,7 +75,10 @@ const ComingSoon = () => {
           <p className="progress-text">{progress}% Completed</p>
         </div>
 
-        {/* <p className="scroll-text">Stay Tuned ↓</p> */}
+        {/* ✅ Button to go to Login page */}
+        <button className="login-button" onClick={handleLoginClick}>
+          Go to Login
+        </button>
       </div>
     </div>
   );

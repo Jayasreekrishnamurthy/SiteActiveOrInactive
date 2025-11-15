@@ -68,15 +68,24 @@ const CheckStatus = () => {
  useEffect(() => {
   if (history.length === 0) return;
 
-  const interval = setInterval(() => {
-    recheckAllSites();
-  }, 5 * 60 * 1000);
+  // Run immediately once on load
+  console.log("🚀 Initial check started...");
+  recheckAllSites();
 
+  // Set interval for every 5 minutes
+  const interval = setInterval(() => {
+    console.log("⏰ Auto recheck triggered...");
+    recheckAllSites();
+  }, 5 * 60 * 1000); // 5 minutes
+
+  // Clean up interval on unmount
   return () => clearInterval(interval);
-}, [history]); // 👈 include `history` not just `history.length`
+}, [history.length]); // Run when history is first loaded
+
 
 const recheckAllSites = async () => {
   console.log("🔁 Auto rechecking all websites...");
+
   for (const item of history) {
     try {
       const response = await axios.post("http://localhost:5000/api/check", { url: item.url });
@@ -90,14 +99,14 @@ const recheckAllSites = async () => {
         time: new Date().toLocaleString(),
       };
 
-      await axios.post("http://localhost:5000/api/incidentlog", updatedEntry);
-
+      // ✅ Update DB (either add or update)
       if (item.id.toString().startsWith("rec-")) {
         await axios.post("http://localhost:5000/api/history", updatedEntry);
       } else {
         await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
       }
 
+      // ✅ Update UI state
       setHistory((prev) =>
         prev.map((h) =>
           h.url.toLowerCase() === item.url.toLowerCase() ? updatedEntry : h
@@ -107,8 +116,11 @@ const recheckAllSites = async () => {
       console.error(`❌ Error rechecking ${item.url}:`, err.message);
     }
   }
+
   console.log("✅ Auto recheck complete at", new Date().toLocaleTimeString());
 };
+
+
 
 
   // ✅ Manual check website
