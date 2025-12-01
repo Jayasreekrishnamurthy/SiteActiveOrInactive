@@ -172,14 +172,7 @@ const CertCheck = () => {
       </div>
       {/* 🔹 Bulk Actions */}
       {selected.length > 0 && (
-        <div
-          style={{
-            marginTop: "15px",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
-          }}
-        >
+        <div className="bulk-delete-btn">
           <button
             style={{ backgroundColor: "red", color: "white", padding: "6px 12px", borderRadius: "5px" }}
             onClick={async () => {
@@ -212,7 +205,7 @@ const CertCheck = () => {
                     onChange={toggleSelectAll}
                   />
                 </th>
-                <th>#</th>
+                <th></th>
                 <th>Website</th>
                 <th>Email</th>
                 <th>Subject CN</th>
@@ -249,10 +242,10 @@ const CertCheck = () => {
                     <button onClick={() => recheckCert(row.id)} style={{ marginRight: "8px" }}>
                       🔄 Re-check
                     </button>
-                    <button onClick={() => editCert(row.id)} style={{ color: "orange", marginRight: "8px" }}>
+                    <button onClick={() => editCert(row.id)} style={{ color: "white", marginRight: "8px" }}>
                       ✏️ Edit
                     </button>
-                    <button onClick={() => deleteCert(row.id)} style={{ color: "red" }}>
+                    <button onClick={() => deleteCert(row.id)} style={{ color: "white" }}>
                       ❌ Delete
                     </button>
                   </td>
@@ -262,16 +255,7 @@ const CertCheck = () => {
           </table>
 
           {/* 🔹 Pagination Controls */}
-          <div
-            style={{
-              marginTop: "15px",
-              display: "flex",
-              justifyContent: "flex-end", // moves pagination to right
-              alignItems: "center",
-              gap: "10px",
-             
-            }}
-          >
+          <div className="pagination-containertls" >
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}

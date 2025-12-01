@@ -106,6 +106,8 @@ const recheckAllSites = async () => {
         await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
       }
 
+      await axios.post("http://localhost:5000/api/incident-log", updatedEntry);
+
       // ✅ Update UI state
       setHistory((prev) =>
         prev.map((h) =>
@@ -200,6 +202,8 @@ const recheckAllSites = async () => {
       } else {
         res = await axios.put(`http://localhost:5000/api/history/${item.id}`, updatedEntry);
       }
+
+      await axios.post("http://localhost:5000/api/incident-log", updatedEntry);
 
       setHistory((prev) =>
         prev.map((h) => (normalizeUrl(h.url) === normalizeUrl(item.url) ? res.data : h))

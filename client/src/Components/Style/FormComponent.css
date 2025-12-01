@@ -8,7 +8,7 @@
 /* Header */
 .record-form-header {
   margin-bottom: 15px;
-  color: #29ABE2;
+  color: black;
 ;
 }
 
@@ -101,7 +101,9 @@
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
-  color: #29ABE2;
+  background: white;
+  color: black;
+  font-family: "Segoe UI", sans-serif;
 }
 
 .record-table th, .record-table td {
@@ -111,7 +113,8 @@
 }
 
 .record-table th {
-  background-color: #f0f0f0;
+  background-color: #1976d2;
+  color: white;
 }
 .record-table-delete-btn {
   padding: 5px 10px;

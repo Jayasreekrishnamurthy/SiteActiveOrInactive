@@ -10,6 +10,7 @@ import {
   faBars,
   faSignOutAlt,
   faUser,
+  faServer,
 } from "@fortawesome/free-solid-svg-icons";
 import "../Style/Dashboard.css";
 
@@ -54,7 +55,8 @@ const Dashboard = () => {
     ],
   },
     { path: "vulnerability", label: "Vulnerability Scanner", icon: faGear },
-    // { path: "profile", label: "Profile", icon: faUser },
+    { path: "incident-log", label: "incident-log", icon: faUser },
+    { path: "infradashboard", label: "System Monitoring", icon: faServer },
   ];
 
   return (

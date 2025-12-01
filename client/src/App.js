@@ -11,6 +11,8 @@ import SslMonitoring from "./Components/Dashboard/SslMonitoring.jsx";
 import VulnerabilityScanner from "./Components/Dashboard/vulnerability.jsx";
 import TlsMonitoring from "./Components/Dashboard/TlsMonitoring.jsx";
 import ComingSoon from "./Components/Lunchingpage/ComingSoon.jsx";
+import IncidentLog from "./Components/Dashboard/IncidentLog.jsx";
+import InfraDashboard from "./Components/InfraDashboard/InfraDashboard.jsx";
 
 // const History = () => <h2>History Page (future data)</h2>;
 // const VulnerabilityScanner = () => <h2>Settings Page</h2>;
@@ -49,6 +51,8 @@ const App = () => {
           <Route path="sslmonitoring/tlsmonitoring" element={<TlsMonitoring />} />
           <Route path="vulnerability" element={<VulnerabilityScanner />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="incident-log" element={<IncidentLog />} />
+          <Route path="infradashboard" element={<InfraDashboard />} />
           
         </Route>
       </Routes>

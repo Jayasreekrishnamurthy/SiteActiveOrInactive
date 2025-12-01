@@ -1,0 +1,182 @@
+.incidentheading {
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #222;
+}
+
+.incident-log-page {
+    padding: 20px;
+    background: #f4f6f9;
+    min-height: 100vh;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.filter-bar input[type="text"],
+.filter-bar select,
+.filter-bar input[type="date"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+}
+
+.filter-bar input[type="text"]:focus,
+.filter-bar select:focus,
+.filter-bar input[type="date"]:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 3px rgba(25,118,210,0.5);
+}
+
+.filter-bar button {
+    padding: 10px 15px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.filter-bar button:hover {
+    background: #125ea5;
+}
+
+.filter-bar button:nth-child(4) {
+    background: green;
+}
+.filter-bar button:nth-child(4):hover {
+    background: #0d7a0d;
+}
+
+.filter-bar button:nth-child(5) {
+    background: #d9534f;
+}
+.filter-bar button:nth-child(5):hover {
+    background: #b52b27;
+}
+
+.filter-bar button:nth-child(6) {
+    background: #444;
+}
+.filter-bar button:nth-child(6):hover {
+    background: #222;
+}
+
+
+/* ============================
+   TABLE
+============================= */
+.incident-table {
+    margin-top: 25px;
+    background: white;
+    color: black;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.incident-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.incident-table th,
+.incident-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+    font-size: 14px;
+}
+
+.incident-table th {
+    background: #1976d2;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.incident-table tr:hover {
+    background: #f1f7ff;
+    transition: 0.2s;
+}
+
+
+/* ============================
+   STATUS COLORS
+============================= */
+.status-active {
+    background: #d4f8d4;
+    color: #0a7a0a;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-transform: capitalize;
+    text-align: center;
+}
+
+.status-inactive {
+    background: #ffe0e0;
+    color: #c21807;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-transform: capitalize;
+    text-align: center;
+}
+
+
+/* ============================
+   PAGINATION
+============================= */
+.pagination-area {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+
+/* ============================
+   RESPONSIVE DESIGN
+============================= */
+@media (max-width: 768px) {
+    .incident-table table,
+    .incident-table thead {
+        display: none;
+    }
+
+    .incident-table tr {
+        display: block;
+        background: white;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .incident-table td {
+        display: flex;
+        justify-content: space-between;
+        border: none;
+        padding: 8px 0;
+    }
+
+    .incident-table td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: #333;
+    }
+}

@@ -10,7 +10,7 @@
 .containerssl h1 {
   margin-bottom: 1.5rem;
   /* text-align: center; */
-  color: #29ABE2;
+  color: black;
 }
 
 .top-section {
@@ -82,6 +82,7 @@
   width: 100%;
   border-collapse: collapse;
   overflow-x: auto;
+  font-family: "Segoe UI", sans-serif;
 }
 
 .ssl-table th,
@@ -92,10 +93,12 @@
 }
 
 .ssl-table th {
-  background-color: #f4f4f4;
+  background-color: #1976d2;
+  color: white;
 }
 .ssl-table td {
-  color: #29ABE2;
+  color: black;
+  font-family: "Segoe UI", sans-serif;
 }
 .ssl-table tr.expired {
   background-color: #e98c8c;
@@ -196,30 +199,143 @@
 
 
 /* tls css */
-.tlscertificate{
-  color: #29ABE2;
-}
-.tlscertificatetable{
-  color: #29ABE2;
+/* ========================== */
+/* TLS Certificate Monitor UI */
+/* ========================== */
+
+/* Page container */
+.tlscertificate {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #222;
 }
 
+/* Search Box */
 .searchtls-container {
-  display: flex;
-  justify-content: flex-end; /* aligns to right */
-  margin-bottom: 15px;
+  display: inline-block;
+  margin-left: 20px;
 }
 
 .searchtls-input {
-  padding: 8px 12px;
-  width: 280px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+  width: 250px;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: 0.3s ease;
 }
 
 .searchtls-input:focus {
+  border-color: #007bff;
   outline: none;
-  border-color: #94b1dd; /* green border on focus */
-  box-shadow: 0 0 5px rgba(134, 182, 221, 0.5);
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.4);
+}
+
+/* Table Styling */
+.tlscertificatetable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.tlscertificatetable th {
+  background: #1976d2;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.tlscertificatetable td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Hover effect */
+.tlscertificatetable tbody tr:hover {
+  background: #f1f7ff;
+  transition: 0.2s ease-in-out;
+}
+
+/* Striped rows */
+.tlscertificatetable tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Action buttons */
+.tlscertificatetable button {
+  cursor: pointer;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.tlscertificatetable button:hover {
+  opacity: 0.8;
+}
+
+/* Recheck button */
+.tlscertificatetable button:first-child {
+  background: #007bff;
+  color: white;
+}
+
+/* Edit button */
+.tlscertificatetable button:nth-child(2) {
+  background: #ffc107;
+  color: black;
+}
+
+/* Delete button */
+.tlscertificatetable button:last-child {
+  background: #dc3545;
+  color: white;
+}
+
+/* Pagination */
+.pagination-containertls {
+  display: flex;
+  justify-content: flex-end !important;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+.pagination-containertls span {
+  padding: 5px 10px;
+  font-weight: bold;
+}
+
+/* Pagination buttons */
+.pagination-containertls button {
+  padding: 6px 12px;
+  border: none;
+  background: #1976d2;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pagination-containertls button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+/* Bulk delete button */
+.bulk-delete-btn {
+  background-color: red;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  width: 15%;
+}
+
+.bulk-delete-btn:hover {
+  opacity: 0.85;
 }

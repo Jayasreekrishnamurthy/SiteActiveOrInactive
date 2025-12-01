@@ -12,9 +12,14 @@ import puppeteer from 'puppeteer';
 import dns from "dns/promises";
 // import tls from "tls";
 import { parse as parseUrl } from "url";
+import cron from "node-cron";
+import archiver from "archiver";
+import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 
+const incidentLogPath = path.join("data", "incident-log.json");
+const incidentBackupPath = path.join(process.cwd(), "incident-log-backup.json");
 
 dotenv.config();
 
@@ -987,6 +992,240 @@ Status: ${certInfo.daysLeft > 0 ? "OK" : "Expired"}`,
   } catch (err) {
     console.error("Recheck error:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+
+
+// Utility: Load JSON safely
+function loadJSON(filePath) {
+    try {
+        if (!fs.existsSync(filePath)) {
+            return []; // first-time usage, file not created
+        }
+
+        const content = fs.readFileSync(filePath, "utf-8").trim();
+
+        if (!content) {
+            return []; // empty file
+        }
+
+        try {
+            return JSON.parse(content);
+        } catch (err) {
+            console.error("⚠ JSON corrupted, resetting file:", err);
+            return [];   // reset to empty to prevent crashes
+        }
+
+    } catch (error) {
+        console.error("⚠ Error reading JSON:", error);
+        return [];
+    }
+}
+
+// Utility: Save JSON safely
+function saveJSON(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+
+// Folder to store monthly zip files
+const monthlyBackupFolder = path.join(process.cwd(), "monthly-backups");
+if (!fs.existsSync(monthlyBackupFolder)) {
+  fs.mkdirSync(monthlyBackupFolder);
+}
+
+// --- CREATE ZIP BACKUP ---
+function createZipBackup() {
+  const date = new Date().toISOString().split("T")[0];
+  const zipFilePath = path.join(
+    monthlyBackupFolder,
+    `incident-backup-${date}.zip`
+  );
+
+  const output = fs.createWriteStream(zipFilePath);
+  const archive = archiver("zip", { zlib: { level: 9 } });
+
+  archive.pipe(output);
+
+  archive.file(incidentLogPath, { name: "incident-log.json" });
+  archive.file(incidentBackupPath, { name: "incident-log-backup.json" });
+
+  archive.finalize();
+
+  output.on("close", () => {
+    console.log(`📦 ZIP Backup Created: ${zipFilePath}`);
+    sendBackupEmail(zipFilePath); // Send email automatically
+  });
+
+  return zipFilePath;
+}
+
+function sendBackupEmail(attachmentPath) {
+  const mailOptions = {
+    from: "jayasreek2910@gmail.com",
+    to: "jayasreek2910@gmail.com",
+    subject: "Monthly Incident Log Backup",
+    text: "Your monthly incident log backup is attached.",
+    attachments: [
+      { filename: path.basename(attachmentPath), path: attachmentPath }
+    ]
+  };
+
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.error("❌ Email Error:", err);
+    } else {
+      console.log("📧 Backup Email Sent:", info.response);
+    }
+  });
+}
+
+// Run every month (1st day, 1AM)
+cron.schedule("0 1 1 * *", () => {
+  console.log("📅 Running Monthly Backup...");
+  createZipBackup();
+});
+
+
+// --- CLEAN OLD LOGS AUTOMATICALLY ---
+function cleanOldLogs() {
+  const logs = loadJSON(incidentLogPath);
+  const backup = loadJSON(incidentBackupPath);
+
+  const now = Date.now();
+  const oneMonth = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+  const newLogs = [];
+  const removedLogs = [];
+
+  logs.forEach((log) => {
+    const logTime = new Date(log.time).getTime();
+
+    if (now - logTime <= oneMonth) {
+      // Keep logs within 30 days
+      newLogs.push(log);
+    } else {
+      // Old log → backup it
+      removedLogs.push(log);
+    }
+  });
+
+  // Save updated logs
+  saveJSON(incidentLogPath, newLogs);
+
+  // Append removed old logs to backup file
+  const updatedBackup = [...backup, ...removedLogs];
+  saveJSON(incidentBackupPath, updatedBackup);
+
+  console.log(
+    `🧹 Cleaned ${removedLogs.length} old logs. Total kept: ${newLogs.length}`
+  );
+}
+
+// Save new incident log
+app.post("/api/incident-log", (req, res) => {
+  try {
+    const logs = loadJSON(incidentLogPath);
+
+    const newLog = {
+      id: Date.now(),
+      url: req.body.url,
+      status: req.body.status,
+      message: req.body.message,
+      code: req.body.code,
+      time: new Date().toISOString(),
+    };
+
+    logs.push(newLog);
+    saveJSON(incidentLogPath, logs);
+
+    // CLEAN OLD LOGS AFTER SAVING
+    cleanOldLogs();
+
+    res.status(201).json(newLog);
+  } catch (err) {
+    console.error("Incident Log Save Error:", err);
+    res.status(500).json({ error: "Failed to save incident log" });
+  }
+});
+
+
+
+app.get("/api/incident-log", (req, res) => {
+  try {
+    const logs = loadJSON(incidentLogPath);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load incident log" });
+  }
+});
+
+app.get("/api/incident-log/backup", (req, res) => {
+  try {
+    const backup = loadJSON(incidentBackupPath);
+    res.json(backup);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load backup logs" });
+  }
+});
+
+
+
+// infrastructure monitoring
+
+
+app.post("/infraupdate", (req, res) => {
+  const d = req.body;
+
+  const query = `
+    INSERT INTO system_monitoring (
+      system_name, ip, cpu_usage, ram_usage, disk_usage,
+      antivirus_name, antivirus_realtime, antivirus_definitions, antivirus_lastupdate,
+      network_status, os_version, boot_time, agent_status, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    ON DUPLICATE KEY UPDATE
+      ip = VALUES(ip),
+      cpu_usage = VALUES(cpu_usage),
+      ram_usage = VALUES(ram_usage),
+      disk_usage = VALUES(disk_usage),
+      antivirus_name = VALUES(antivirus_name),
+      antivirus_realtime = VALUES(antivirus_realtime),
+      antivirus_definitions = VALUES(antivirus_definitions),
+      antivirus_lastupdate = VALUES(antivirus_lastupdate),
+      network_status = VALUES(network_status),
+      os_version = VALUES(os_version),
+      boot_time = VALUES(boot_time),
+      agent_status = VALUES(agent_status),
+      updated_at = NOW();
+  `;
+
+  db.query(query, [
+    d.system_name, d.ip,
+    d.cpu_usage, d.ram_usage, d.disk_usage,
+    d.antivirus_name, d.antivirus_realtime, d.antivirus_definitions, d.antivirus_lastupdate,
+    d.network_status, d.os_version, d.boot_time,
+    d.agent_status
+  ], (err) => {
+    if (err) return res.status(500).send(err);
+    res.send("Updated");
+  });
+});
+
+
+app.get("/infraall", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM system_monitoring ORDER BY updated_at DESC"
+    );
+    res.send(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err);
   }
 });
 
